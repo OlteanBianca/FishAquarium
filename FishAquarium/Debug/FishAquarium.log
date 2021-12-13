@@ -1,0 +1,22 @@
+﻿  FishAquarium.cpp
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\shared\minwindef.h(130,1): warning C4005: 'APIENTRY': macro redefinition
+C:\ProiectMG\_External\glad\include\glad\glad.h(32): message : see previous definition of 'APIENTRY'
+C:\ProiectMG\FishAquarium\FishAquarium\Shader.h(54,40): warning C4101: 'e': unreferenced local variable
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(67,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(68,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(72,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(73,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(75,10): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(76,10): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(83,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(392,38): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(393,35): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(394,72): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(397,38): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(398,36): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(402,38): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(407,38): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(412,38): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(413,36): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\ProiectMG\FishAquarium\FishAquarium\FishAquarium.cpp(474,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  FishAquarium.vcxproj -> C:\ProiectMG\FishAquarium\Debug\FishAquarium.exe
