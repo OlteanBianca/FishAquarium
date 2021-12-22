@@ -37,9 +37,6 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-//unsigned int val;
-//Texture text("C:\\Users\\Edy\\Desktop\\Facultate\\Facultate -Exercitii si probleme\\AN II SEM I\\Modelare grafica\\FishAquarium\\Debug\\sand.jpg",val);
-
 std::vector<std::pair<unsigned int, std::string>>cubeTextures = { {1,"topTexture"},{2,"middleTexture"},{3,"baseTexture"} };
 std::vector<std::pair<unsigned int, std::string>>fishTextures = { {4,"fish1"},{5,"fish2"},{6,"fish3"},{7,"fish4"},{8,"fish5"} };
 unsigned int bubblesTexture;
