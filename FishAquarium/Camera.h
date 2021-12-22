@@ -7,7 +7,7 @@
 
 #include <vector>
 
-enum Camera_Movement 
+enum Camera_Movement
 {
 	FORWARD,
 	BACKWARD,
@@ -35,6 +35,13 @@ public:
 	float Yaw;
 	float Pitch;
 
+	float zNear;
+	float zFar;
+	float FoVy;
+	int width;
+	int height;
+	bool isPerspective;
+
 	float MovementSpeed;
 	float MouseSensitivity;
 	float Zoom;
@@ -57,9 +64,30 @@ public:
 		updateCameraVectors();
 	}
 
+	const glm::vec3 GetPosition() const
+	{
+		return Position;
+	}
+
 	glm::mat4 GetViewMatrix()
 	{
 		return glm::lookAt(Position, Position + Front, Up);
+	}
+
+	const glm::mat4 GetProjectionMatrix() const
+	{
+		glm::mat4 Proj = glm::mat4(1);
+		if (isPerspective) {
+			float aspectRatio = ((float)(width)) / height;
+			Proj = glm::perspective(glm::radians(FoVy), aspectRatio, zNear, zFar);
+		}
+		else {
+			float scaleFactor = 2000.f;
+			Proj = glm::ortho<float>(
+				-width / scaleFactor, width / scaleFactor,
+				-height / scaleFactor, height / scaleFactor, -zFar, zFar);
+		}
+		return Proj;
 	}
 
 	void ProcessKeyboard(Camera_Movement direction, float deltaTime)
@@ -116,7 +144,7 @@ private:
 		front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
 
 		Front = glm::normalize(front);
-		Right = glm::normalize(glm::cross(Front, WorldUp)); 
+		Right = glm::normalize(glm::cross(Front, WorldUp));
 		Up = glm::normalize(glm::cross(Right, Front));
 	}
 };

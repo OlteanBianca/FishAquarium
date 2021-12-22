@@ -15,11 +15,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\_External\glad\src\glad.c">
+    <ClCompile Include="FishAquarium.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FishAquarium.cpp">
-      <Filter>Resource Files</Filter>
+    <ClCompile Include="..\_external\glad\src\glad.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -29,18 +29,33 @@
     <ClInclude Include="Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="baseShader.fs">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="baseShader.vs">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="topShader.fs">
       <Filter>Source Files</Filter>
     </None>
     <None Include="topShader.vs">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Blending.fs">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Blending.vs">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="ShadowMapping.fs">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="ShadowMapping.vs">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="ShadowMappingDepth.fs">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="ShadowMappingDepth.vs">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
