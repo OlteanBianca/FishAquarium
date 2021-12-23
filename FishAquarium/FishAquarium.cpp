@@ -1,10 +1,10 @@
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <glfw3.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stdlib.h>
-//#include <stb_image.h>
-#include <GLFW/glfw3.h>
+#include <stb_image.h>
+#include <glfw3.h>
 #include <GL/glut.h>
 
 #define GLM_FORCE_CTOR_INIT 
@@ -15,10 +15,6 @@
 
 #include "Shader.h"
 #include "Camera.h"
-#include "Texture.h"
-
-#include <filesystem>
-#include <iostream>
 
 #pragma comment (lib, "glfw3dll.lib")
 #pragma comment (lib, "glew32.lib")
@@ -37,20 +33,52 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-std::vector<std::pair<unsigned int, std::string>>cubeTextures = { {1,"topTexture"},{2,"middleTexture"},{3,"baseTexture"} };
-std::vector<std::pair<unsigned int, std::string>>fishTextures = { {4,"fish1"},{5,"fish2"},{6,"fish3"},{7,"fish4"},{8,"fish5"} };
-unsigned int bubblesTexture;
-std::vector<std::pair<unsigned int, std::string>>decoTextures = { {10,"grass"},{11,"blueLeaf"},{12,"yellowLeaf"},{13,"redCoralReef"},{14,"sweetGrass"}, {15,"blueCoralReef"},{16,"pinkCoralReef"} };
-unsigned int rocksTexture, rockTexture2;
+std::vector<std::pair<unsigned int, std::string>> cubeTextures = {
+	{1,"cube_top.jpg"},
+	{2,"cube_middle.jpg"},
+	{3,"cube_base.jpg"},
+	{4,"cube_support.jpg"}
+};
+
+std::vector<std::pair<unsigned int, std::string>> fishTextures = {
+	{4,"fish1.jpg"},
+	{5,"fish2.jpg"},
+	{6,"fish3.jpg"},
+	{7,"fish4.jpg"},
+	{8,"fish5.png"}
+};
+
+std::vector<std::pair<unsigned int, std::string>> plantsTextures = {
+	{10,"deco_grass.png"},
+	{11,"deco_blueLeaf.png"},
+	{12,"deco_yellowLeaf.png"},
+	{13,"deco_redCoralReef.png"},
+	{14,"deco_sweetGrass.png"},
+	{15,"deco_blueCoralReef.png"},
+	{16,"deco_pinkCoralReef.png"},
+	{16,"deco_greenLeaf.png"},
+	{17,"deco_leaves.png"}
+};
+
+std::vector<std::pair<unsigned int, std::string>> decoTextures = {
+	{17,"rock.jpg"},
+	{18,"rock2.png"},
+	{19,"bubbles.png"},
+	{20,"lamp4.jpg"},
+};
 
 unsigned int base_VBO, base_VAO;
 unsigned int middle_VBO, middle_VAO;
 unsigned int top_VBO, top_VAO;
+unsigned int support_VBO, support_VAO;
+unsigned int column_VBO, column_VAO;
 unsigned int fish_VBO, fish_VAO;
 unsigned int grass_VBO, grass_VAO;
 unsigned int bubbles_VBO, bubbles_VAO;
 unsigned int rock_VBO, rock_VAO;
-unsigned int depthMapFBO,depthMap;
+unsigned int lamp_VBO, lamp_VAO;
+unsigned int light_VBO, light_VAO;
+unsigned int depthMapFBO, depthMap;
 
 void processInput(GLFWwindow* window)
 {
@@ -98,11 +126,10 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	camera.ProcessMouseScroll(yoffset);
 }
 
-void Texture(std::string strExePath, unsigned int& texture)
+void Texture(std::pair<unsigned int, std::string>& texture)
 {
 	int width, height, nrChannels;
-	//stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load(strExePath.c_str(), &width, &height, &nrChannels, 0);
+	unsigned char* data = stbi_load(("..\\Debug\\" + texture.second).c_str(), &width, &height, &nrChannels, 0);
 	if (data)
 	{
 		GLenum format;
@@ -113,8 +140,8 @@ void Texture(std::string strExePath, unsigned int& texture)
 		else if (nrChannels == 4)
 			format = GL_RGBA;
 
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glGenTextures(1, &texture.first);
+		glBindTexture(GL_TEXTURE_2D, texture.first);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -122,7 +149,6 @@ void Texture(std::string strExePath, unsigned int& texture)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 	}
 	else
 	{
@@ -151,6 +177,70 @@ void GenerateVertexAndBind(unsigned int& VAO, unsigned int& VBO, int size)
 	}
 }
 
+void DrawLamp()
+{
+	float lamp[] = {
+
+		//front
+		4.5f, 3.0f, 2.5f,  0.0f, 0.0f,   // 11  top right
+		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
+		4.5f, 2.5f, 2.5f,  1.0f, 1.0f,   // 15 
+
+		3.5f, 2.7f, 2.5f,  0.0f, 0.0f,   // 20 
+		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
+		4.5f, 2.5f, 2.5f,  1.0f, 1.0f,   // 15 
+
+		//back
+		4.5f, 3.0f, 1.8f,  0.0f, 0.0f,   // 16  
+		3.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 19 
+		4.5f, 2.5f, 1.8f,  1.0f, 1.0f,   // 18 
+
+		3.5f, 2.7f, 1.8f,  0.0f, 0.0f,   // 21 
+		3.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 19 
+		4.5f, 2.5f, 1.8f,  1.0f, 1.0f,   // 18 
+
+		//right
+		4.5f, 3.0f, 2.5f,  0.0f, 0.0f,   // 11 
+		4.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 16 
+		4.5f, 2.5f, 2.5f,  1.0f, 1.0f,   // 15
+
+		4.5f, 2.5f, 1.8f,  0.0f, 0.0f,   // 18 
+		4.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 16 
+		4.5f, 2.5f, 2.5f,  1.0f, 1.0f,   // 15
+
+		//top
+		4.5f, 3.0f, 2.5f,  0.0f, 0.0f,   // 11 
+		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
+		4.5f, 3.0f, 1.8f,  1.0f, 1.0f,   // 16 
+
+		3.5f, 3.0f, 1.8f,  0.0f, 0.0f,   // 19 
+		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
+		4.5f, 3.0f, 1.8f,  1.0f, 1.0f,   // 16
+
+		//base
+		4.5f, 2.5f, 2.5f,  0.0f, 0.0f,   // 15 
+		3.5f, 2.7f, 2.5f,  1.0f, 0.0f,   // 20 
+		4.5f, 2.5f, 1.8f,  1.0f, 1.0f,   // 18 
+
+		3.5f, 2.7f, 1.8f,  0.0f, 0.0f,   // 21 
+		3.5f, 2.7f, 2.5f,  1.0f, 0.0f,   // 20 
+		4.5f, 2.5f, 1.8f,  1.0f, 1.0f,   // 18
+
+		//left
+		3.5f, 3.0f, 2.5f,  0.0f, 0.0f,   // 14 
+		3.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 19 
+		3.5f, 2.7f, 1.8f,  1.0f, 1.0f,   // 21
+
+		3.5f, 2.7f, 1.8f,  0.0f, 0.0f,   // 21 
+		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
+		3.5f, 2.7f, 2.5f,  1.0f, 1.0f,   // 20
+	};
+
+	//lamp
+	GenerateVertexAndBind(lamp_VAO, lamp_VBO, 5);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(lamp), lamp, GL_STATIC_DRAW);
+}
+
 void DrawFish()
 {
 	float fish[] = {
@@ -158,60 +248,59 @@ void DrawFish()
 		//head
 		 0.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // a  
 		 0.3f,  0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // b 
-		 0.3f,  0.0f,  0.2f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // l 
+		 0.3f,  0.0f,  0.2f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // l 
 
 		 0.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // a  
 		 0.3f, -0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // c 
-		 0.3f,  0.0f,  0.2f, 0.0f, 1.0f, 0.0f,   1.0f, 1.0f,   // l 
+		 0.3f,  0.0f,  0.2f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // l 
 
 		 0.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // a  	
 		 0.3f,  0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // b
-		 0.3f,  0.0f, -0.2f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // m 
+		 0.3f,  0.0f, -0.2f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // m 
 
 		 0.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // a  
 		 0.3f, -0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // c
-		 0.3f,  0.0f, -0.2f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // m 
+		 0.3f,  0.0f, -0.2f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // m 
 
 		//body
 		 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // d   
 		 0.3f,  0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // b  
-		 0.3f,  0.0f,  0.2f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // l 
+		 0.3f,  0.0f,  0.2f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // l 
 
 		 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // d  
 		 0.3f, -0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // c  
-		 0.3f,  0.0f,  0.2f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // l 
+		 0.3f,  0.0f,  0.2f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // l 
 
 		 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // d   
 		 0.3f,  0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // b
-		 0.3f,  0.0f, -0.2f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // m 
+		 0.3f,  0.0f, -0.2f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // m 
 
 		 1.0f,  0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // d  
 		 0.3f, -0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // c
-		 0.3f,  0.0f, -0.2f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // m 
+		 0.3f,  0.0f, -0.2f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // m 
 
 		 //tail
 		 1.5f,   0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // e   
 		 1.0f,   0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // d  
-		 1.3f,  0.04f,  0.0f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // f 
+		 1.3f,  0.04f,  0.0f,0.0f, 1.0f, 0.0f,      1.0f, 1.0f,   // f 
 
 		 1.0f,   0.0f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // d   
 		 1.5f,  -0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // g 
-		 1.3f, -0.04f,  0.0f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // n 
+		 1.3f, -0.04f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // n 
 
 		 //top fin  
 		 0.8f,  0.4f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // h  
 		 0.3f,  0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // b  
-		 0.6f,  0.2f,  0.0f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // i 
+		 0.6f,  0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // i 
 
 		 //bottom fin 
 		 0.8f, -0.4f,  0.0f, 0.0f, 1.0f, 0.0f,     0.0f, 0.0f,   // j   
-		 0.3f, -0.2f,  0.0f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // c   
-		 0.6f, -0.2f,  0.0f,0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // k 
+		 0.3f, -0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 0.0f,   // c   
+		 0.6f, -0.2f,  0.0f, 0.0f, 1.0f, 0.0f,     1.0f, 1.0f,   // k 
 	};
 
 	GenerateVertexAndBind(fish_VAO, fish_VBO, 8);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(fish), fish, GL_STATIC_DRAW);
-
 }
 
 void DrawDeco()
@@ -226,8 +315,7 @@ void DrawDeco()
 		 0.5f,  0.5f,  0.0f,  1.0f, 0.0f  //d
 	};
 
-	float bubbles[] =
-	{
+	float bubbles[] = {
 		-0.10f,  0.10f,  0.0f,  0.0f, 0.0f,
 		-0.10f, -0.10f,  0.0f,  0.0f, 1.0f,
 		 0.10f, -0.10f,  0.0f,  1.0f, 1.0f,
@@ -247,33 +335,33 @@ void DrawDeco()
 void DrawRocks()
 {
 	float rocks[] = {
-		0.1f, -0.45f, 0.1f, 0.0f, 0.0f,   // a  
-		0.4f, -0.65f, 0.1f, 1.0f, 0.0f,   // b 
-		0.4f, -0.45f, 0.3f, 1.0f, 1.0f,   // l 
+		0.1f, -0.45f,  0.1f,   0.0f, 0.0f,   // a  
+		0.4f, -0.65f,  0.1f,   1.0f, 0.0f,   // b 
+		0.4f, -0.45f,  0.3f,   1.0f, 1.0f,   // l 
 
-		0.1f, -0.45f, 0.1f, 0.0f, 0.0f,   // a  
-		0.4f, -0.65f, 0.1f, 1.0f, 0.0f,   // c 
-		0.4f, -0.45f, 0.3f, 1.0f, 1.0f,   // l 
+		0.1f, -0.45f,  0.1f,   0.0f, 0.0f,   // a  
+		0.4f, -0.65f,  0.1f,   1.0f, 0.0f,   // c 
+		0.4f, -0.45f,  0.3f,   1.0f, 1.0f,   // l 
 
-		0.1f, -0.45f, 0.1f, 0.0f, 0.0f,   // a  	
-		0.4f, -0.25f, 0.1f, 1.0f, 0.0f,   // b
-		0.4f, -0.45f, -0.1f, 1.0f, 1.0f,   // m 
+		0.1f, -0.45f,  0.1f,   0.0f, 0.0f,   // a  	
+		0.4f, -0.25f,  0.1f,   1.0f, 0.0f,   // b
+		0.4f, -0.45f, -0.1f,   1.0f, 1.0f,   // m 
 
-		0.1f, -0.45f, 0.1f, 0.0f, 0.0f,   // a  
-		0.4f, -0.65f, 0.1f, 1.0f, 0.0f,   // c
-		0.4f, -0.45f, -0.1f, 1.0f, 1.0f,   // m 
+		0.1f, -0.45f,  0.1f,   0.0f, 0.0f,   // a  
+		0.4f, -0.65f,  0.1f,   1.0f, 0.0f,   // c
+		0.4f, -0.45f, -0.1f,   1.0f, 1.0f,   // m 
 
-		0.4f, -0.45f, 0.3f, 0.0f, 1.0f,   // l 
-		0.4f, -0.25f, 0.1f, 1.0f, 0.0f,   // b
-		0.4f, -0.45f, -0.1f, 1.0f, 1.0f,   // m 
+		0.4f, -0.45f,  0.3f,   0.0f, 1.0f,   // l 
+		0.4f, -0.25f,  0.1f,   1.0f, 0.0f,   // b
+		0.4f, -0.45f, -0.1f,   1.0f, 1.0f,   // m 
 
-		0.4f, -0.45f, -0.1f, 0.0f, 1.0f,   // m 
-		0.4f, -0.65f, 0.1f, 1.0f, 0.0f,   // c
-		0.4f, -0.45f, 0.3f, 1.0f, 1.0f,   // l
+		0.4f, -0.45f, -0.1f,   0.0f, 1.0f,   // m 
+		0.4f, -0.65f,  0.1f,   1.0f, 0.0f,   // c
+		0.4f, -0.45f,  0.3f,   1.0f, 1.0f,   // l
 	};
+
 	GenerateVertexAndBind(rock_VAO, rock_VBO, 5);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(rocks), rocks, GL_STATIC_DRAW);
-
 }
 
 void DrawAquarium()
@@ -392,62 +480,176 @@ void DrawAquarium()
 		-4.5f,  2.5f, -2.5f,    0.0f, 1.0f    // 13
 	};
 
-	float  bottom_cube[] = {
+	float bottom_cube[] = {
 
 		//back
-		-4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 1  left down
-		 4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 2  right down
-		 4.5f, -0.5f, -2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 3  right top
+		-4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 1  left down
+		 4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 2  right down
+		 4.5f, -0.5f, -2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 3  right top
 
-		 4.5f, -0.5f, -2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 3
-		-4.5f, -0.5f, -2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 4  left top
-		-4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f,   // 1
+		 4.5f, -0.5f, -2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 3
+		-4.5f, -0.5f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 4  left top
+		-4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 1
 
 		//front
-		-4.5f, -1.0f,  2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 5  left down
-		 4.5f, -1.0f,  2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 6  right down
-		 4.5f, -0.5f,  2.5f,  0.0f, 1.0f, 0.0f,   1.0f, 1.0f,   // 7  right top
+		-4.5f, -1.0f,  2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 5  left down
+		 4.5f, -1.0f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 6  right down
+		 4.5f, -0.5f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 7  right top
 
-		 4.5f, -0.5f,  2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 7
-		-4.5f,  0.2f,  2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 9  left top
-		-4.5f, -1.0f,  2.5f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f,   // 5
+		 4.5f, -0.5f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 7
+		-4.5f,  0.2f,  2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 9  left top
+		-4.5f, -1.0f,  2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 5
 
 		//left
-		-4.5f,  0.2f,  2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 9
-		-4.5f, -0.5f, -2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 4
-		-4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f,   // 1
+		-4.5f,  0.2f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 9
+		-4.5f, -0.5f, -2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 4
+		-4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 1
 
-		-4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 1
-		-4.5f, -1.0f,  2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 5
-		-4.5f,  0.2f,  2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 9
+		-4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 1
+		-4.5f, -1.0f,  2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 5
+		-4.5f,  0.2f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 9
 
 		//right
-		 4.5f, -0.5f,  2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 7
-		 4.5f, -0.5f, -2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 3
-		 4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 2
+		 4.5f, -0.5f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 7
+		 4.5f, -0.5f, -2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 3
+		 4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 2
 
-		 4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 2
-		 4.5f, -1.0f,  2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 6
-		 4.5f, -0.5f,  2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 7
+		 4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 2
+		 4.5f, -1.0f,  2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 6
+		 4.5f, -0.5f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 7
 
 		 //base
-		-4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 1
-		 4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,   1.0f, 1.0f,   // 2
-		 4.5f, -1.0f,  2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 6
+		-4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 1
+		 4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 2
+		 4.5f, -1.0f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 6
 
-		 4.5f, -1.0f,  2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 6
-		-4.5f, -1.0f,  2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 5
-		-4.5f, -1.0f, -2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 1
+		 4.5f, -1.0f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 6
+		-4.5f, -1.0f,  2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 5
+		-4.5f, -1.0f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 1
 
 		//top
-		-4.5f, -0.5f, -2.5f,  0.0f, 1.0f, 0.0f,     0.0f, 1.0f,   // 4
-		 4.5f, -0.5f, -2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 3
-		 4.5f, -0.5f,  2.5f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // 7
+		-4.5f, -0.5f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 4
+		 4.5f, -0.5f, -2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 1.0f,   // 3
+		 4.5f, -0.5f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 7
 
-		 4.5f, -0.5f,  2.5f,  0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 7
-		-4.5f,  0.2f,  2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 9
-		-4.5f, -0.5f, -2.5f,  0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 4
+		 4.5f, -0.5f,  2.5f,   0.0f, 1.0f, 0.0f,    1.0f, 0.0f,   // 7
+		-4.5f,  0.2f,  2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 0.0f,   // 9
+		-4.5f, -0.5f, -2.5f,   0.0f, 1.0f, 0.0f,    0.0f, 1.0f,   // 4
 	};
+
+	float support_cube[] = {
+		//back
+		-5.5f, -1.5f, -3.5f,  0.0f, 0.0f,   // 1  left down
+		 5.5f, -1.5f, -3.5f,  1.0f, 0.0f,   // 2  right down
+		 5.5f, -1.0f, -3.5f,  1.0f, 1.0f,   // 3  right top
+
+		 5.5f, -1.0f, -3.5f,  1.0f, 1.0f,   // 3
+		-5.5f, -1.0f, -3.5f,  0.0f, 1.0f,   // 4  left top
+		-5.5f, -1.5f, -3.5f,  0.0f, 0.0f,   // 1
+
+		//front
+		-5.5f, -1.5f,  3.5f,  0.0f, 0.0f,   // 5  left down
+		 5.5f, -1.5f,  3.5f,  1.0f, 0.0f,   // 6  right down
+		 5.5f, -1.0f,  3.5f,  1.0f, 1.0f,   // 7  right top
+
+		 5.5f, -1.0f,  3.5f,  1.0f, 1.0f,   // 7
+		-5.5f, -1.0f,  3.5f,  0.0f, 1.0f,   // 9  left top
+		-5.5f, -1.5f,  3.5f,  0.0f, 0.0f,   // 5
+
+		//left
+		-5.5f, -1.0f,  3.5f,  1.0f, 0.0f,   // 9
+		-5.5f, -1.0f, -3.5f,  1.0f, 1.0f,   // 4
+		-5.5f, -1.5f, -3.5f,  0.0f, 1.0f,   // 1
+
+		-5.5f, -1.5f, -3.5f,  0.0f, 1.0f,   // 1
+		-5.5f, -1.5f,  3.5f,  0.0f, 0.0f,   // 5
+		-5.5f, -1.0f,  3.5f,  1.0f, 0.0f,   // 9
+
+		//right
+		 5.5f, -1.0f,  3.5f,  1.0f, 0.0f,   // 7
+		 5.5f, -1.0f, -3.5f,  1.0f, 1.0f,   // 3
+		 5.5f, -1.5f, -3.5f,  0.0f, 1.0f,   // 2
+
+		 5.5f, -1.5f, -3.5f,  0.0f, 1.0f,   // 2
+		 5.5f, -1.5f,  3.5f,  0.0f, 0.0f,   // 6
+		 5.5f, -1.0f,  3.5f,  1.0f, 0.0f,   // 7
+
+		 //base
+		-5.5f, -1.5f, -3.5f,  0.0f, 1.0f,   // 1
+		 5.5f, -1.5f, -3.5f,  1.0f, 1.0f,   // 2
+		 5.5f, -1.5f,  3.5f,  1.0f, 0.0f,   // 6
+
+		 5.5f, -1.5f,  3.5f,  1.0f, 0.0f,   // 6
+		-5.5f, -1.5f,  3.5f,  0.0f, 0.0f,   // 5
+		-5.5f, -1.5f, -3.5f,  0.0f, 1.0f,   // 1
+
+		//top
+		-5.5f, -1.0f, -3.5f,  0.0f, 1.0f,   // 4
+		 5.5f, -1.0f, -3.5f,  1.0f, 1.0f,   // 3
+		 5.5f, -1.0f,  3.5f,  1.0f, 0.0f,   // 7
+
+		 5.5f, -1.0f,  3.5f,  1.0f, 0.0f,   // 7
+		-5.5f, -1.0f,  3.5f,  0.0f, 0.0f,   // 9
+		-5.5f, -1.0f, -3.5f,  0.0f, 1.0f,   // 4
+	};
+
+	float column[] = {
+
+		//back
+		-0.2f, -2.0f, -0.2f,    0.0f, 0.0f,   // 4  left down
+		 0.2f, -2.0f, -0.2f,    1.0f, 0.0f,   // 3  right down
+		 0.2f,  2.0f, -0.2f,    1.0f, 1.0f,   // 12 right top
+
+		 0.2f,  2.0f, -0.2f,    1.0f, 1.0f,   // 12
+		-0.2f,  2.0f, -0.2f,    0.0f, 1.0f,   // 13 left top
+		-0.2f, -2.0f, -0.2f,    0.0f, 0.0f,   // 4
+
+		//front
+		-0.2f, -2.0f,  0.2f,    0.0f, 0.0f,   // 9  left down
+		 0.2f, -2.0f,  0.2f,    1.0f, 0.0f,   // 7  right down
+		 0.2f,  2.0f,  0.2f,    1.0f, 1.0f,   // 11 right top
+
+		 0.2f,  2.0f,  0.2f,    1.0f, 1.0f,   // 11
+		-0.2f,  2.0f,  0.2f,    0.0f, 1.0f,   // 10 left top
+		-0.2f, -2.0f,  0.2f,    0.0f, 0.0f,   // 9
+
+		//left
+		-0.2f,  2.0f,  0.2f,    1.0f, 0.0f,   // 10
+		-0.2f,  2.0f, -0.2f,    1.0f, 1.0f,   // 13
+		-0.2f, -2.0f, -0.2f,    0.0f, 1.0f,   // 4
+
+		-0.2f, -2.0f, -0.2f,    0.0f, 1.0f,   // 4
+		-0.2f, -2.0f,  0.2f,    0.0f, 0.0f,   // 9
+		-0.2f,  2.0f,  0.2f,    1.0f, 0.0f,   // 10
+
+		//right
+		 0.2f,  2.0f,  0.2f,    1.0f, 0.0f,   // 11
+		 0.2f, -2.0f, -0.2f,    1.0f, 1.0f,   // 12
+		 0.2f, -2.0f, -0.2f,    0.0f, 1.0f,   // 3
+
+		 0.2f, -2.0f, -0.2f,    0.0f, 1.0f,   // 3
+		 0.2f, -2.0f,  0.2f,    0.0f, 0.0f,   // 7
+		 0.2f,  2.0f,  0.2f,    1.0f, 0.0f,   // 11
+
+		// //base
+		//-0.2f,  2.5f, -2.5f,    0.0f, 1.0f,   // 4
+		// 0.2f,  2.5f, -2.5f,    1.0f, 1.0f,   // 3
+		// 0.2f,  2.5f,  2.5f,    1.0f, 0.0f,   // 7
+
+		// 0.2f,  2.5f,  2.5f,    1.0f, 0.0f,   // 7
+		//-0.2f,  2.5f,  2.5f,    0.0f, 0.0f,   // 9
+		//-0.2f,  2.5f, -2.5f,    0.0f, 1.0f,   // 4
+
+		////top
+		//-0.2f,  3.0f, -2.5f,    0.0f, 1.0f,   // 13
+		// 0.2f,  3.0f, -2.5f,    1.0f, 1.0f,   // 12
+		// 0.2f,  3.0f,  2.5f,    1.0f, 0.0f,   // 11
+
+		// 0.2f,  3.0f,  2.5f,    1.0f, 0.0f,   // 11
+		//-0.2f,  3.0f,  2.5f,    0.0f, 0.0f,   // 10
+		//-0.2f,  3.0f, -2.5f,    0.0f, 1.0f    // 13
+	};
+	
 	//base cube
 	GenerateVertexAndBind(base_VAO, base_VBO, 8);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(bottom_cube), bottom_cube, GL_STATIC_DRAW);
@@ -459,6 +661,14 @@ void DrawAquarium()
 	//top cube
 	GenerateVertexAndBind(top_VAO, top_VBO, 5);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(top_cube), top_cube, GL_STATIC_DRAW);
+
+	//support cube
+	GenerateVertexAndBind(support_VAO, support_VBO, 5);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(support_cube), support_cube, GL_STATIC_DRAW);
+
+	//column
+	GenerateVertexAndBind(column_VAO, column_VBO, 5);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(column), column, GL_STATIC_DRAW);
 }
 
 void Rotate(Shader& decoShader, glm::mat4& model, unsigned int texture, unsigned int numberOfRotations, unsigned int value)
@@ -485,7 +695,6 @@ void DrawBubbles(Shader& decoShader, unsigned int texture, glm::vec3 position, f
 
 	if (Movement >= 2.85) Movement = position.y;
 
-	//decoShader.use();
 	decoShader.setMat4("model", model);
 	Rotate(decoShader, model, texture, 200, 1);
 
@@ -498,8 +707,7 @@ void RenderFish(Shader& shader, Shader& decoShader)
 	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 bubbles = glm::mat4(1.0f);
 
-	static glm::mat4 models[] =
-	{
+	static glm::mat4 models[] = {
 		glm::mat4(1.0f),
 		glm::mat4(1.0f),
 		glm::mat4(1.0f),
@@ -508,24 +716,30 @@ void RenderFish(Shader& shader, Shader& decoShader)
 	};
 
 	static glm::vec2 incrementAndMovement[] = {
-		glm::vec2(0.019,1.9),
+		glm::vec2(0.019, 1.9),
 		glm::vec2(0.014,-1.9),
 		glm::vec2(0.013,-1.5),
-		glm::vec2(0.014,2.5),
+		glm::vec2(0.014, 2.5),
 		glm::vec2(0.013,-1.2)
 	};
 
 	glm::vec3 fishPosition[] = {
-		glm::vec3(incrementAndMovement[0].y - incrementAndMovement[0].x,1.3f,0.0f),
+		glm::vec3(incrementAndMovement[0].y - incrementAndMovement[0].x,1.3f, 0.0f),
 		glm::vec3(incrementAndMovement[1].y - incrementAndMovement[1].x,2.0f,-1.5f),
-		glm::vec3(incrementAndMovement[2].y - incrementAndMovement[2].x,1.0f,1.5f),
+		glm::vec3(incrementAndMovement[2].y - incrementAndMovement[2].x,1.0f, 1.5f),
 		glm::vec3(incrementAndMovement[3].y - incrementAndMovement[3].x,0.5f,-1.5f),
-		glm::vec3(incrementAndMovement[4].y - incrementAndMovement[4].x,2.0f,1.5f)
+		glm::vec3(incrementAndMovement[4].y - incrementAndMovement[4].x,2.0f, 1.5f)
 	};
 
-	static std::vector<float> bubbleMovement{ fishPosition[0].y,fishPosition[1].y,fishPosition[2].y,fishPosition[3].y,fishPosition[4].y };
-	static std::vector<float> bubbleIncrement{ 0.003,0.003,0.007,0.008,0.005 };
-	std::vector<bool>createAnotherBubble{ false,false,false,false,false };
+	static std::vector<float> bubbleMovement{
+		fishPosition[0].y,
+		fishPosition[1].y,
+		fishPosition[2].y,
+		fishPosition[3].y,
+		fishPosition[4].y
+	};
+
+	static std::vector<float> bubbleIncrement{ 0.003, 0.003, 0.007, 0.008, 0.005 };
 
 	for (int index = 0; index < 5; index++)
 	{
@@ -550,17 +764,15 @@ void RenderFish(Shader& shader, Shader& decoShader)
 		glBindVertexArray(0);
 
 		decoShader.use();
-		DrawBubbles(decoShader, bubblesTexture, fishPosition[index], bubbleMovement[index], bubbleIncrement[index]);
+		DrawBubbles(decoShader, decoTextures[2].first, fishPosition[index], bubbleMovement[index], bubbleIncrement[index]);
 	}
 }
 
 void RenderRocks(Shader& shader)
 {
-
 	glm::mat4 model = glm::mat4(1.0f);
 
-	static glm::mat4 models[] =
-	{
+	static glm::mat4 models[] = {
 		glm::mat4(1.0f),
 		glm::mat4(1.0f),
 		glm::mat4(1.0f),
@@ -572,12 +784,12 @@ void RenderRocks(Shader& shader)
 	};
 
 	glm::vec3 rockPosition[] = {
-		glm::vec3(-1.1f,-0.95f,0.1f),
+		glm::vec3(-1.1f,-0.95f, 0.1f),
 		glm::vec3(1.4f,-0.95f,-1.4f),
-		glm::vec3(1.8f,-0.95f,1.4f),
+		glm::vec3(1.8f,-0.95f, 1.4f),
 		glm::vec3(3.4f,-0.95f,-1.5f),
-		glm::vec3(-3.9f,-0.55f,1.4f),
-		glm::vec3(2.9f,-0.95f,2.0f),
+		glm::vec3(-3.9f,-0.55f, 1.4f),
+		glm::vec3(2.9f,-0.95f, 2.0f),
 		glm::vec3(0.0f,-0.95f,-1.0f),
 		glm::vec3(-4.0f,-0.95f,-2.0f),
 	};
@@ -592,15 +804,32 @@ void RenderRocks(Shader& shader)
 
 		glBindVertexArray(rock_VAO);
 		glActiveTexture(GL_TEXTURE0);
+
 		if (index % 2 == 0)
-			glBindTexture(GL_TEXTURE_2D, rocksTexture);
+			glBindTexture(GL_TEXTURE_2D, decoTextures[0].first);
 		else
-			glBindTexture(GL_TEXTURE_2D, rockTexture2);
+			glBindTexture(GL_TEXTURE_2D, decoTextures[1].first);
+
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
-
 	}
+}
+
+void RenderLamp(Shader& shader)
+{
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+
+	shader.use();
+	shader.setMat4("model", model);
+
+	glBindVertexArray(lamp_VAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, decoTextures[3].first);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
 }
 
 void RenderVegetation(Shader& decoShader, glm::mat4& model, glm::vec3 VegetationPosition, unsigned int texture, unsigned int numberOfRotations, unsigned int value)
@@ -620,102 +849,141 @@ void DrawVegetation(Shader& decoShader, std::pair<unsigned int, std::string>& te
 	glm::mat4 model = glm::mat4(1.0f);
 
 	glm::vec3 Grass[] = {
-		glm::vec3(0.0f, -0.2f, 0.0f),
-		glm::vec3(2.5f,-0.2f,1.5f),
+		glm::vec3(0.0f,-0.2f, 0.0f),
+		glm::vec3(2.5f,-0.2f, 1.5f),
 		glm::vec3(-3.0f,-0.2f,-2.0f),
 		glm::vec3(1.0f,-0.2f,-2.0f),
-		glm::vec3(-4.0f,0.3f,1.0f),
+		glm::vec3(-4.0f, 0.3f, 1.0f),
 		glm::vec3(3.2f,-0.2f,-1.0f),
-		glm::vec3(-2.0f,0.1f,1.2f),
+		glm::vec3(-2.0f, 0.1f, 1.2f),
 	};
 
-	glm::vec3 BlueLeafs[] =
-	{
-		glm::vec3(1.6f,0.0f,-0.3f),
-		glm::vec3(-1.5f,0.0f,-1.2f),
-		glm::vec3(-3.0f,0.5f,2.0f)
+	glm::vec3 BlueLeafs[] = {
+		glm::vec3(1.6f, 0.0f,-0.3f),
+		glm::vec3(-1.5f, 0.0f,-1.2f),
+		glm::vec3(-3.0f, 0.5f, 2.0f)
 	};
 
-	glm::vec3 YellowLeafs[] =
-	{
-		glm::vec3(-3.5f,0.1f,-0.5f),
-		glm::vec3(3.5f,0.0f,0.75f),
-		glm::vec3(-0.5f,0.2f,2.0f)
+	glm::vec3 YellowLeafs[] = {
+		glm::vec3(-3.5f, 0.1f, -0.5f),
+		glm::vec3(3.5f, 0.0f, 0.75f),
+		glm::vec3(-0.5f, 0.2f,  2.0f)
 	};
 
 	glm::vec3 redCoralBubblePositions[] = {
-		glm::vec3(0.0f,0.35f,-1.0f),
-		glm::vec3(0.3f,0.15f,-1.0f),
-		glm::vec3(-0.3f,0.15f,-1.0f)
+		glm::vec3(0.0f, -0.15f,-1.0f),
+		glm::vec3(2.3f, -0.15f,-1.0f),
+		glm::vec3(-3.3f, -0.15f, 1.0f)
 	};
+
 	glm::vec3 blueCoralBubblePositions[] = {
-		glm::vec3(3.0f,0.35f,0.0f),
-		glm::vec3(3.0f,0.15f,0.0f),
-		glm::vec3(-3.0f,0.15f,0.0f)
+		glm::vec3(3.0f, 0.35f, 0.0f),
+		glm::vec3(3.0f, 0.15f, 0.0f),
+		glm::vec3(-3.0f, 0.15f, 0.0f)
 	};
+
 	glm::vec3 pinkCoralBubblePositions[] = {
-		glm::vec3(-3.0f,0.65f,0.5f),
-		glm::vec3(-3.0f,0.45f,0.5f),
-		glm::vec3(3.0f,0.45f,0.5f)
+		glm::vec3(-3.0f, 0.65f,  0.5f),
+		glm::vec3(-1.0f,  0.0f,  0.5f),
+		glm::vec3(3.0f, -0.1f,  0.5f),
+		glm::vec3(1.0f, -0.1f, -2.0f)
 	};
 
 	glm::vec3 sweetGrass[] = {
-		glm::vec3(4.0f,0.0f,2.0f),
-		glm::vec3(4.0f,0.4f,2.0f),
-		glm::vec3(4.0f,0.8f,2.0f),
-		glm::vec3(4.0f,1.2f,2.0f),
+		glm::vec3(4.0f, 0.0f,  2.0f),
+		glm::vec3(4.0f, 0.4f,  2.0f),
+		glm::vec3(4.0f, 0.8f,  2.0f),
+		glm::vec3(4.0f, 1.2f,  2.0f),
 
-		glm::vec3(2.5f,0.0f,-1.5f),
-		glm::vec3(2.5f,0.4f,-1.5f),
-		glm::vec3(2.5f,0.8f,-1.5f),
-		glm::vec3(2.5f,1.2f,-1.5f),
-		glm::vec3(2.5f,1.6f,-1.5f),
+		glm::vec3(2.5f, 0.0f, -1.5f),
+		glm::vec3(2.5f, 0.4f, -1.5f),
+		glm::vec3(2.5f, 0.8f, -1.5f),
+		glm::vec3(2.5f, 1.2f, -1.5f),
+		glm::vec3(2.5f, 1.6f, -1.5f),
 
-		glm::vec3(-2.0f,0.0f,0.0f),
-		glm::vec3(-2.0f,0.4f,0.0f),
-		glm::vec3(-2.0f,0.8f,0.0f),
+		glm::vec3(-2.0f, 0.0f,  0.0f),
+		glm::vec3(-2.0f, 0.4f,  0.0f),
+		glm::vec3(-2.0f, 0.8f,  0.0f),
 
+		glm::vec3(-1.0f, 0.0f,  1.0f),
+		glm::vec3(-3.0f, 0.0f,  1.0f),
+		glm::vec3(2.0f, 0.0f, -1.0f),
+		glm::vec3(-3.0f, 0.1f,  2.2f),
+
+		glm::vec3(-4.0f, 0.1f,  2.2f),
+		glm::vec3(-4.0f, 0.5f,  2.2f),
+		glm::vec3(-4.0f, 0.9f,  2.2f),
+		glm::vec3(-4.0f, 1.3f,  2.2f),
 	};
-	if (texture.second == "grass")
+
+	glm::vec3 greenLeafs[] = {
+		glm::vec3(-4.0f, 0.1f, -2.0f),
+		glm::vec3(4.0f, 0.0f, -2.0f),
+		glm::vec3(1.5f, 0.2f,  2.0f)
+	};
+
+	glm::vec3 leaves[] = {
+		glm::vec3(-3.0f,  0.0f, -2.0f),
+		glm::vec3(3.0f, -0.1f, -2.0f),
+		glm::vec3(-1.5f,  0.1f,  1.0f),
+		glm::vec3(0.5f, -0.1f,  1.3f),
+	};
+
+	if (texture.second == "deco_grass.png")
 		for (const auto& vector : Grass)
 			RenderVegetation(decoShader, model, vector, texture.first, 8, 1);
 
-	if (texture.second == "blueLeaf")
+	if (texture.second == "deco_pinkCoralReef.png")
+		for (const auto& vector : pinkCoralBubblePositions)
+			RenderVegetation(decoShader, model, vector, texture.first, 8, 1);
+
+	if (texture.second == "deco_redCoralReef.png")
+		for (const auto& vector : redCoralBubblePositions)
+			RenderVegetation(decoShader, model, vector, texture.first, 8, 1);
+
+	if (texture.second == "deco_leaves.png")
+		for (const auto& vector : leaves)
+			RenderVegetation(decoShader, model, vector, texture.first, 3, 10);
+
+	if (texture.second == "deco_greenLeaf.png")
+		for (const auto& vector : greenLeafs)
+			RenderVegetation(decoShader, model, vector, texture.first, 3, 4);
+
+	if (texture.second == "deco_blueLeaf.png")
 		for (const auto& vector : BlueLeafs)
 			RenderVegetation(decoShader, model, vector, texture.first, 5, 1);
 
-	if (texture.second == "yellowLeaf")
+	if (texture.second == "deco_yellowLeaf.png")
 		for (const auto& vector : YellowLeafs)
 			RenderVegetation(decoShader, model, vector, texture.first, 5, 1);
 
-	if (texture.second == "sweetGrass")
+	if (texture.second == "deco_sweetGrass.png")
 		for (const auto& vector : sweetGrass)
 			RenderVegetation(decoShader, model, vector, texture.first, 5, 3);
-	if (texture.second == "redCoralReef" || texture.second == "blueCoralReef" || texture.second == "pinkCoralReef")
+
+	if (texture.second == "deco_redCoralReef.png" || texture.second == "deco_blueCoralReef.png" || texture.second == "deco_pinkCoralReef.png")
 	{
-		static std::vector<float> bubbleMovement{ 0.35f,0.15f,0.15f };
-		static std::vector<float> bubbleIncrement{ 0.005,0.005,0.005 };
-		if (texture.second == "redCoralReef")
+		static std::vector<float> bubbleMovement{ 0.35f, 0.15f, 0.15f };
+		static std::vector<float> bubbleIncrement{ 0.005, 0.005, 0.005 };
+		if (texture.second == "deco_redCoralReef.png")
 		{
 			RenderVegetation(decoShader, model, glm::vec3(0.0f, 0.0f, -1.0f), texture.first, 5, 10);
 			for (int index = 0; index < redCoralBubblePositions->length(); ++index)
-				DrawBubbles(decoShader, bubblesTexture, redCoralBubblePositions[index], bubbleMovement[index], bubbleIncrement[index]);
+				DrawBubbles(decoShader, decoTextures[2].first, redCoralBubblePositions[index], bubbleMovement[index], bubbleIncrement[index]);
 		}
-		if (texture.second == "blueCoralReef")
+		if (texture.second == "deco_blueCoralReef.png")
 		{
 			RenderVegetation(decoShader, model, glm::vec3(3.0f, 0.0f, 0.0f), texture.first, 5, 10);
 			for (int index = 0; index < blueCoralBubblePositions->length(); ++index)
-				DrawBubbles(decoShader, bubblesTexture, blueCoralBubblePositions[index], bubbleMovement[index], bubbleIncrement[index]);
+				DrawBubbles(decoShader, decoTextures[2].first, blueCoralBubblePositions[index], bubbleMovement[index], bubbleIncrement[index]);
 		}
-		if (texture.second == "pinkCoralReef")
+		if (texture.second == "deco_pinkCoralReef.png")
 		{
 			RenderVegetation(decoShader, model, glm::vec3(-3.0f, 0.3f, 0.5f), texture.first, 5, 10);
 			for (int index = 0; index < pinkCoralBubblePositions->length(); ++index)
-				DrawBubbles(decoShader, bubblesTexture, pinkCoralBubblePositions[index], bubbleMovement[index], bubbleIncrement[index]);
+				DrawBubbles(decoShader, decoTextures[2].first, pinkCoralBubblePositions[index], bubbleMovement[index], bubbleIncrement[index]);
 		}
-
 	}
-
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 }
@@ -725,7 +993,7 @@ void CreateAquarium(unsigned int& VAO, std::pair<unsigned int, std::string> text
 	glBindVertexArray(VAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture.first);
-	if (texture.second == "middleTexture" || texture.second == "topTexture")
+	if (texture.second == "cube_middle.jpg" || texture.second == "cube_top.jpg")
 	{
 		glPolygonMode(GL_FRONT, GL_LINE);
 		glDisable(GL_DEPTH_TEST);
@@ -739,6 +1007,15 @@ void CreateAquarium(unsigned int& VAO, std::pair<unsigned int, std::string> text
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
+}
+
+void RenderColumns(Shader& shader, glm::vec3 position, unsigned int VAO)
+{
+	glm::mat4 model2 = glm::mat4(1.0f);
+	model2 = glm::translate(model2, position);
+	shader.setMat4("model", model2);
+
+	CreateAquarium(VAO, cubeTextures[3]);
 }
 
 void RenderFunction(Shader& cubeShader, Shader& shadow, Shader& decoShader)
@@ -779,19 +1056,36 @@ void RenderFunction(Shader& cubeShader, Shader& shadow, Shader& decoShader)
 	CreateAquarium(base_VAO, cubeTextures[2]);
 	RenderFish(shadow, decoShader);
 
+	//columns and supports
+	glm::vec3 position[] = {
+		glm::vec3( 0.0, 0.0,  0.0),
+		glm::vec3( 0.0, 4.5,  0.0),
+		glm::vec3( 5.0, 1.0,  3.0),
+		glm::vec3(-5.0, 1.0,  3.0),
+		glm::vec3( 5.0, 1.0, -3.0),
+		glm::vec3(-5.0, 1.0, -3.0)
+	};
+
+	RenderColumns(cubeShader, position[0], support_VAO);
+	RenderColumns(cubeShader, position[1], support_VAO);
+
+	for (int i=2; i<6; i++)
+		RenderColumns(cubeShader, position[i], column_VAO);
+
 	decoShader.use();
 	decoShader.setMat4("projection", projection);
 	decoShader.setMat4("view", view);
 
-	for (int index = 0; index < decoTextures.size(); ++index)
-		DrawVegetation(decoShader, decoTextures[index]);
+	for (int index = 0; index < plantsTextures.size(); ++index)
+		DrawVegetation(decoShader, plantsTextures[index]);
 
 	RenderRocks(decoShader);
+	RenderLamp(decoShader);
 }
 
 void DeleteVertexArrayAndBuffer(unsigned int& VAO)
 {
-	glDeleteVertexArrays(1,&VAO);
+	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VAO);
 }
 
@@ -802,7 +1096,7 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef _APPLE_
+#ifdef APPLE
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
@@ -826,41 +1120,28 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	std::string strFullExeFileName = argv[0];
-	std::string strExePath;
-	const size_t last_slash_idx = strFullExeFileName.rfind('\\');
-	if (std::string::npos != last_slash_idx) {
-		strExePath = strFullExeFileName.substr(0, last_slash_idx);
-	}
-
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_CULL_FACE);
 
 	DrawAquarium();
 	DrawFish();
 	DrawRocks();
 	DrawDeco();
+	DrawLamp();
 
-	Texture(strExePath + "\\glass2.jpg", cubeTextures[0].first);
-	Texture(strExePath + "\\water1.jpg", cubeTextures[1].first);
-	Texture(strExePath + "\\sand.jpg", cubeTextures[2].first);
-	Texture(strExePath + "\\scales.jpg", fishTextures[0].first);
-	Texture(strExePath + "\\scales2.jpg", fishTextures[1].first);
-	Texture(strExePath + "\\scales3.jpg", fishTextures[2].first);
-	Texture(strExePath + "\\scales4.jpg", fishTextures[3].first);
-	Texture(strExePath + "\\scales5.png", fishTextures[4].first);
-	Texture(strExePath + "\\bubbles2.png", bubblesTexture);
-	Texture(strExePath + "\\grass.png", decoTextures[0].first);
-	Texture(strExePath + "\\blueLeaf.png", decoTextures[1].first);
-	Texture(strExePath + "\\yellowLeaf.png", decoTextures[2].first);
-	Texture(strExePath + "\\redCoralReef.png", decoTextures[3].first);
-	Texture(strExePath + "\\sweetGrass.png", decoTextures[4].first);
-	Texture(strExePath + "\\coralReef.png", decoTextures[5].first);
-	Texture(strExePath + "\\pinkCoral.png", decoTextures[6].first);
+	for (auto& i : cubeTextures)
+		Texture(i);
 
-	Texture(strExePath + "\\rock.jpg", rocksTexture);
-	Texture(strExePath + "\\rock2.png", rockTexture2);
+	for (auto& i : fishTextures)
+		Texture(i);
+
+	for (auto& i : plantsTextures)
+		Texture(i);
+
+	for (auto& i : decoTextures)
+		Texture(i);
 
 	Shader cubeShader("topShader.vs", "topShader.fs");
 	Shader decoShader("Blending.vs", "Blending.fs");
@@ -895,10 +1176,9 @@ int main(int argc, char** argv)
 	shadowMappingShader.setInt("shadowMap", 1);
 
 	glm::vec3 lightPos(7.0f, 3.5f, 0.0f);
-
-	glEnable(GL_CULL_FACE);
 	glm::mat4 lightProjection, lightView;
 	glm::mat4 lightSpaceMatrix;
+
 	float near_plane = 1.0f, far_plane = 7.5f;
 
 	while (!glfwWindowShouldClose(window))
@@ -931,15 +1211,16 @@ int main(int argc, char** argv)
 		lightPos.x = glm::sin(1.0);
 		lightPos.z = glm::cos(1.0);
 
-		shadowMappingShader.use();
 		glm::mat4 projection = camera.GetProjectionMatrix();
 		glm::mat4 view = camera.GetViewMatrix();
+
+		shadowMappingShader.use();
 		shadowMappingShader.setMat4("projection", projection);
 		shadowMappingShader.setMat4("view", view);
-
 		shadowMappingShader.setVec3("viewPos", camera.GetPosition());
 		shadowMappingShader.setVec3("lightPos", lightPos);
 		shadowMappingShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, cubeTextures[2].first);
 		glActiveTexture(GL_TEXTURE1);

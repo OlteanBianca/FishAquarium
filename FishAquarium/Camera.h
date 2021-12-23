@@ -6,6 +6,8 @@
 #include <gtc/matrix_transform.hpp>
 
 #include <vector>
+#include <filesystem>
+#include <iostream>
 
 enum Camera_Movement
 {
@@ -77,11 +79,13 @@ public:
 	const glm::mat4 GetProjectionMatrix() const
 	{
 		glm::mat4 Proj = glm::mat4(1);
-		if (isPerspective) {
+		if (isPerspective)
+		{
 			float aspectRatio = ((float)(width)) / height;
 			Proj = glm::perspective(glm::radians(FoVy), aspectRatio, zNear, zFar);
 		}
-		else {
+		else
+		{
 			float scaleFactor = 2000.f;
 			Proj = glm::ortho<float>(
 				-width / scaleFactor, width / scaleFactor,
@@ -92,19 +96,30 @@ public:
 
 	void ProcessKeyboard(Camera_Movement direction, float deltaTime)
 	{
+
 		float velocity = MovementSpeed * deltaTime;
+		glm::vec3 next_pos = Position;
+
 		if (direction == FORWARD)
-			Position += Front * velocity;
+			next_pos += Front * velocity;
+
 		if (direction == BACKWARD)
-			Position -= Front * velocity;
+			next_pos -= Front * velocity;
+
 		if (direction == LEFT)
-			Position -= Right * velocity;
+			next_pos -= Right * velocity;
+
 		if (direction == RIGHT)
-			Position += Right * velocity;
+			next_pos += Right * velocity;
+
 		if (direction == UP)
-			Position += Up * velocity;
+			next_pos += Up * velocity;
+
 		if (direction == DOWN)
-			Position -= Up * velocity;
+			next_pos -= Up * velocity;
+
+		//if ((next_pos.x < -4.7 || next_pos.x > 4.7) || (next_pos.y > 3.7 || next_pos.y < -1.7) || (next_pos.z > 2.7 || next_pos.z < -2.7))
+			Position = next_pos;
 	}
 
 	void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
