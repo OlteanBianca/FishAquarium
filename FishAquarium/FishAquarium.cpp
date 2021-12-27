@@ -4,7 +4,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stdlib.h>
 #include <stb_image.h>
-#include <glfw3.h>
 #include <GL/glut.h>
 
 #define GLM_FORCE_CTOR_INIT 
@@ -37,15 +36,16 @@ std::vector<std::pair<unsigned int, std::string>> cubeTextures = {
 	{1,"cube_top.jpg"},
 	{2,"cube_middle.jpg"},
 	{3,"cube_base.jpg"},
-	{4,"cube_support.jpg"}
+	{4,"cube_support.jpg"},
+	{5,"cube_table.png"}
 };
 
 std::vector<std::pair<unsigned int, std::string>> fishTextures = {
-	{4,"fish1.jpg"},
-	{5,"fish2.jpg"},
-	{6,"fish3.jpg"},
-	{7,"fish4.jpg"},
-	{8,"fish5.png"}
+	{6,"fish1.jpg"},
+	{7,"fish2.jpg"},
+	{8,"fish3.jpg"},
+	{9,"fish4.jpg"},
+	{10,"fish5.png"}
 };
 
 std::vector<std::pair<unsigned int, std::string>> plantsTextures = {
@@ -64,14 +64,29 @@ std::vector<std::pair<unsigned int, std::string>> decoTextures = {
 	{17,"rock.jpg"},
 	{18,"rock2.png"},
 	{19,"bubbles.png"},
-	{20,"lamp4.jpg"},
+	{20,"lamp.jpg"},
 };
 
+std::vector<std::pair<unsigned int, std::string>> faces =
+{
+	{21,"room_floor.jpg"},
+	{22,"room_floor.jpg"},
+	{23,"room_backwall.jpg"},
+	{24,"room_frontwall.png"},
+	{25,"room_window.png"},
+	{26,"room_book.png"},
+};
+
+unsigned int back_and_front_faces_VBO, back_and_front_faces_VAO;
+unsigned int left_and_right_faces_VBO, left_and_right_faces_VAO;
+unsigned int base_and_top_faces_VBO, base_and_top_faces_VAO;
 unsigned int base_VBO, base_VAO;
 unsigned int middle_VBO, middle_VAO;
 unsigned int top_VBO, top_VAO;
 unsigned int support_VBO, support_VAO;
 unsigned int column_VBO, column_VAO;
+unsigned int table_VBO, table_VAO;
+unsigned int tableSupport_VBO, tableSupport_VAO;
 unsigned int fish_VBO, fish_VAO;
 unsigned int grass_VBO, grass_VAO;
 unsigned int bubbles_VBO, bubbles_VAO;
@@ -129,7 +144,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void Texture(std::pair<unsigned int, std::string>& texture)
 {
 	int width, height, nrChannels;
-	unsigned char* data = stbi_load(("..\\Debug\\" + texture.second).c_str(), &width, &height, &nrChannels, 0);
+	unsigned char* data = stbi_load(("Texture\\" + texture.second).c_str(), &width, &height, &nrChannels, 0);
 	if (data)
 	{
 		GLenum format;
@@ -166,6 +181,7 @@ void GenerateVertexAndBind(unsigned int& VAO, unsigned int& VBO, int size)
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, size * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, size * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
@@ -182,58 +198,58 @@ void DrawLamp()
 	float lamp[] = {
 
 		//front
-		4.5f, 3.0f, 2.5f,  0.0f, 0.0f,   // 11  top right
-		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
-		4.5f, 2.5f, 2.5f,  1.0f, 1.0f,   // 15 
+		4.5f, 3.0f, 1.8f,  0.0f, 0.0f,   // 11  top right
+		4.2f, 3.0f, 1.8f,  1.0f, 0.0f,   // 14 
+		4.5f, 2.9f, 1.8f,  1.0f, 1.0f,   // 15 
 
-		3.5f, 2.7f, 2.5f,  0.0f, 0.0f,   // 20 
-		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
-		4.5f, 2.5f, 2.5f,  1.0f, 1.0f,   // 15 
+		4.2f, 2.9f, 1.8f,  0.0f, 0.0f,   // 20 
+		4.2f, 3.0f, 1.8f,  1.0f, 0.0f,   // 14 
+		4.5f, 2.9f, 1.8f,  1.0f, 1.0f,   // 15 
 
 		//back
-		4.5f, 3.0f, 1.8f,  0.0f, 0.0f,   // 16  
-		3.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 19 
-		4.5f, 2.5f, 1.8f,  1.0f, 1.0f,   // 18 
+		4.5f, 3.0f, -1.8f,  0.0f, 0.0f,   // 16  
+		4.2f, 3.0f, -1.8f,  1.0f, 0.0f,   // 19 
+		4.5f, 2.9f, -1.8f,  1.0f, 1.0f,   // 18 
 
-		3.5f, 2.7f, 1.8f,  0.0f, 0.0f,   // 21 
-		3.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 19 
-		4.5f, 2.5f, 1.8f,  1.0f, 1.0f,   // 18 
+		4.2f, 2.9f, -1.8f,  0.0f, 0.0f,   // 21 
+		4.2f, 3.0f, -1.8f,  1.0f, 0.0f,   // 19 
+		4.5f, 2.9f, -1.8f,  1.0f, 1.0f,   // 18 
 
 		//right
-		4.5f, 3.0f, 2.5f,  0.0f, 0.0f,   // 11 
-		4.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 16 
-		4.5f, 2.5f, 2.5f,  1.0f, 1.0f,   // 15
+		4.5f, 3.0f, 1.8f,  0.0f, 0.0f,   // 11 
+		4.5f, 3.0f, -1.8f,  1.0f, 0.0f,   // 16 
+		4.5f, 2.9f, 1.8f,  1.0f, 1.0f,   // 15
 
-		4.5f, 2.5f, 1.8f,  0.0f, 0.0f,   // 18 
-		4.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 16 
-		4.5f, 2.5f, 2.5f,  1.0f, 1.0f,   // 15
+		4.5f, 2.9f, -1.8f,  0.0f, 0.0f,   // 18 
+		4.5f, 3.0f, -1.8f,  1.0f, 0.0f,   // 16 
+		4.5f, 2.9f, 1.8f,  1.0f, 1.0f,   // 15
 
 		//top
-		4.5f, 3.0f, 2.5f,  0.0f, 0.0f,   // 11 
-		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
-		4.5f, 3.0f, 1.8f,  1.0f, 1.0f,   // 16 
+		4.5f, 3.0f, 1.8f,  0.0f, 0.0f,   // 11 
+		4.2f, 3.0f, 1.8f,  1.0f, 0.0f,   // 14 
+		4.5f, 3.0f, -1.8f,  1.0f, 1.0f,   // 16 
 
-		3.5f, 3.0f, 1.8f,  0.0f, 0.0f,   // 19 
-		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
-		4.5f, 3.0f, 1.8f,  1.0f, 1.0f,   // 16
+		4.2f, 3.0f, -1.8f,  0.0f, 0.0f,   // 19 
+		4.2f, 3.0f, 1.8f,  1.0f, 0.0f,   // 14 
+		4.5f, 3.0f, -1.8f,  1.0f, 1.0f,   // 16
 
 		//base
-		4.5f, 2.5f, 2.5f,  0.0f, 0.0f,   // 15 
-		3.5f, 2.7f, 2.5f,  1.0f, 0.0f,   // 20 
-		4.5f, 2.5f, 1.8f,  1.0f, 1.0f,   // 18 
+		4.5f, 2.9f, 1.8f,  0.0f, 0.0f,   // 15 
+		4.2f, 2.9f, 1.8f,  1.0f, 0.0f,   // 20 
+		4.5f, 2.9f, -1.8f,  1.0f, 1.0f,   // 18 
 
-		3.5f, 2.7f, 1.8f,  0.0f, 0.0f,   // 21 
-		3.5f, 2.7f, 2.5f,  1.0f, 0.0f,   // 20 
-		4.5f, 2.5f, 1.8f,  1.0f, 1.0f,   // 18
+		4.2f, 2.9f, -1.8f,  0.0f, 0.0f,   // 21 
+		4.2f, 2.9f, 1.8f,  1.0f, 0.0f,   // 20 
+		4.5f, 2.9f, -1.8f,  1.0f, 1.0f,   // 18
 
 		//left
-		3.5f, 3.0f, 2.5f,  0.0f, 0.0f,   // 14 
-		3.5f, 3.0f, 1.8f,  1.0f, 0.0f,   // 19 
-		3.5f, 2.7f, 1.8f,  1.0f, 1.0f,   // 21
+		4.2f, 3.0f, 1.8f,  0.0f, 0.0f,   // 14 
+		4.2f, 3.0f, -1.8f,  1.0f, 0.0f,   // 19 
+		4.2f, 2.9f, -1.8f,  1.0f, 1.0f,   // 21
 
-		3.5f, 2.7f, 1.8f,  0.0f, 0.0f,   // 21 
-		3.5f, 3.0f, 2.5f,  1.0f, 0.0f,   // 14 
-		3.5f, 2.7f, 2.5f,  1.0f, 1.0f,   // 20
+		4.2f, 2.9f, -1.8f,  0.0f, 0.0f,   // 21 
+		4.2f, 3.0f, 1.8f,  1.0f, 0.0f,   // 14 
+		4.2f, 2.9f, 1.8f,  1.0f, 1.0f,   // 20
 	};
 
 	//lamp
@@ -596,60 +612,170 @@ void DrawAquarium()
 	float column[] = {
 
 		//back
-		-0.2f, -2.0f, -0.2f,    0.0f, 0.0f,   // 4  left down
-		 0.2f, -2.0f, -0.2f,    1.0f, 0.0f,   // 3  right down
-		 0.2f,  2.0f, -0.2f,    1.0f, 1.0f,   // 12 right top
+		-0.2f, -2.2f, -0.2f,    0.0f, 0.0f,   // 4  left down
+		 0.2f, -2.2f, -0.2f,    1.0f, 0.0f,   // 3  right down
+		 0.2f,  2.2f, -0.2f,    1.0f, 1.0f,   // 12 right top
 
-		 0.2f,  2.0f, -0.2f,    1.0f, 1.0f,   // 12
-		-0.2f,  2.0f, -0.2f,    0.0f, 1.0f,   // 13 left top
-		-0.2f, -2.0f, -0.2f,    0.0f, 0.0f,   // 4
+		 0.2f,  2.2f, -0.2f,    1.0f, 1.0f,   // 12
+		-0.2f,  2.2f, -0.2f,    0.0f, 1.0f,   // 13 left top
+		-0.2f, -2.2f, -0.2f,    0.0f, 0.0f,   // 4
 
 		//front
-		-0.2f, -2.0f,  0.2f,    0.0f, 0.0f,   // 9  left down
-		 0.2f, -2.0f,  0.2f,    1.0f, 0.0f,   // 7  right down
-		 0.2f,  2.0f,  0.2f,    1.0f, 1.0f,   // 11 right top
+		-0.2f, -2.2f,  0.2f,    0.0f, 0.0f,   // 9  left down
+		 0.2f, -2.2f,  0.2f,    1.0f, 0.0f,   // 7  right down
+		 0.2f,  2.2f,  0.2f,    1.0f, 1.0f,   // 11 right top
 
-		 0.2f,  2.0f,  0.2f,    1.0f, 1.0f,   // 11
-		-0.2f,  2.0f,  0.2f,    0.0f, 1.0f,   // 10 left top
-		-0.2f, -2.0f,  0.2f,    0.0f, 0.0f,   // 9
+		 0.2f,  2.2f,  0.2f,    1.0f, 1.0f,   // 11
+		-0.2f,  2.2f,  0.2f,    0.0f, 1.0f,   // 10 left top
+		-0.2f, -2.2f,  0.2f,    0.0f, 0.0f,   // 9
 
 		//left
-		-0.2f,  2.0f,  0.2f,    1.0f, 0.0f,   // 10
-		-0.2f,  2.0f, -0.2f,    1.0f, 1.0f,   // 13
-		-0.2f, -2.0f, -0.2f,    0.0f, 1.0f,   // 4
+		-0.2f,  2.2f,  0.2f,    1.0f, 0.0f,   // 10
+		-0.2f,  2.2f, -0.2f,    1.0f, 1.0f,   // 13
+		-0.2f, -2.2f, -0.2f,    0.0f, 1.0f,   // 4
 
-		-0.2f, -2.0f, -0.2f,    0.0f, 1.0f,   // 4
-		-0.2f, -2.0f,  0.2f,    0.0f, 0.0f,   // 9
-		-0.2f,  2.0f,  0.2f,    1.0f, 0.0f,   // 10
+		-0.2f, -2.2f, -0.2f,    0.0f, 1.0f,   // 4
+		-0.2f, -2.2f,  0.2f,    0.0f, 0.0f,   // 9
+		-0.2f,  2.2f,  0.2f,    1.0f, 0.0f,   // 10
 
 		//right
-		 0.2f,  2.0f,  0.2f,    1.0f, 0.0f,   // 11
-		 0.2f, -2.0f, -0.2f,    1.0f, 1.0f,   // 12
-		 0.2f, -2.0f, -0.2f,    0.0f, 1.0f,   // 3
+		 0.2f,  2.2f,  0.2f,    1.0f, 0.0f,   // 11
+		 0.2f,  2.2f, -0.2f,    1.0f, 1.0f,   // 12
+		 0.2f, -2.2f, -0.2f,    0.0f, 1.0f,   // 3
 
-		 0.2f, -2.0f, -0.2f,    0.0f, 1.0f,   // 3
-		 0.2f, -2.0f,  0.2f,    0.0f, 0.0f,   // 7
-		 0.2f,  2.0f,  0.2f,    1.0f, 0.0f,   // 11
-
-		// //base
-		//-0.2f,  2.5f, -2.5f,    0.0f, 1.0f,   // 4
-		// 0.2f,  2.5f, -2.5f,    1.0f, 1.0f,   // 3
-		// 0.2f,  2.5f,  2.5f,    1.0f, 0.0f,   // 7
-
-		// 0.2f,  2.5f,  2.5f,    1.0f, 0.0f,   // 7
-		//-0.2f,  2.5f,  2.5f,    0.0f, 0.0f,   // 9
-		//-0.2f,  2.5f, -2.5f,    0.0f, 1.0f,   // 4
-
-		////top
-		//-0.2f,  3.0f, -2.5f,    0.0f, 1.0f,   // 13
-		// 0.2f,  3.0f, -2.5f,    1.0f, 1.0f,   // 12
-		// 0.2f,  3.0f,  2.5f,    1.0f, 0.0f,   // 11
-
-		// 0.2f,  3.0f,  2.5f,    1.0f, 0.0f,   // 11
-		//-0.2f,  3.0f,  2.5f,    0.0f, 0.0f,   // 10
-		//-0.2f,  3.0f, -2.5f,    0.0f, 1.0f    // 13
+		 0.2f, -2.2f, -0.2f,    0.0f, 1.0f,   // 3
+		 0.2f, -2.2f,  0.2f,    0.0f, 0.0f,   // 7
+		 0.2f,  2.2f,  0.2f,    1.0f, 0.0f,   // 11
 	};
-	
+
+	float table[] = {
+		//back
+	-6.5f, -2.5f, -4.5f,  0.0f, 0.0f,   // 1  left down
+	 6.5f, -1.5f, -4.5f,  1.0f, 0.0f,   // 2  right down
+	 6.5f, -2.5f, -4.5f,  1.0f, 1.0f,   // 3  right top
+
+	 6.5f, -2.5f, -4.5f,  1.0f, 1.0f,   // 3
+	-6.5f, -2.5f, -4.5f,  0.0f, 1.0f,   // 4  left top
+	-6.5f, -1.5f, -4.5f,  0.0f, 0.0f,   // 1
+
+	//front
+	-6.5f, -1.5f,  4.5f,  0.0f, 0.0f,   // 5  left down
+	 6.5f, -1.5f,  4.5f,  1.0f, 0.0f,   // 6  right down
+	 6.5f, -2.5f,  4.5f,  1.0f, 1.0f,   // 7  right top
+
+	 6.5f, -2.5f,  4.5f,  1.0f, 1.0f,   // 7
+	-6.5f, -2.5f,  4.5f,  0.0f, 1.0f,   // 9  left top
+	-6.5f, -1.5f,  4.5f,  0.0f, 0.0f,   // 5
+
+	//left
+	-6.5f, -2.5f,  4.5f,  1.0f, 0.0f,   // 9
+	-6.5f, -2.5f, -4.5f,  1.0f, 1.0f,   // 4
+	-6.5f, -1.5f, -4.5f,  0.0f, 1.0f,   // 1
+
+	-6.5f, -1.5f, -4.5f,  0.0f, 1.0f,   // 1
+	-6.5f, -1.5f,  4.5f,  0.0f, 0.0f,   // 5
+	-6.5f, -2.5f,  4.5f,  1.0f, 0.0f,   // 9
+
+	//right
+	 6.5f, -2.5f,  4.5f,  1.0f, 0.0f,   // 7
+	 6.5f, -2.5f, -4.5f,  1.0f, 1.0f,   // 3
+	 6.5f, -1.5f, -4.5f,  0.0f, 1.0f,   // 2
+
+	 6.5f, -1.5f, -4.5f,  0.0f, 1.0f,   // 2
+	 6.5f, -1.5f,  4.5f,  0.0f, 0.0f,   // 6
+	 6.5f, -2.5f,  4.5f,  1.0f, 0.0f,   // 7
+
+	 //top
+	-6.5f, -1.5f, -4.5f,  0.0f, 1.0f,   // 1
+	 6.5f, -1.5f, -4.5f,  1.0f, 1.0f,   // 2
+	 6.5f, -1.5f,  4.5f,  1.0f, 0.0f,   // 6
+
+	 6.5f, -1.5f,  4.5f,  1.0f, 0.0f,   // 6
+	-6.5f, -1.5f,  4.5f,  0.0f, 0.0f,   // 5
+	-6.5f, -1.5f, -4.5f,  0.0f, 1.0f,   // 1
+
+	//base
+	-6.5f, -2.5f, -4.5f,  0.0f, 1.0f,   // 4
+	 6.5f, -2.5f, -4.5f,  1.0f, 1.0f,   // 3
+	 6.5f, -2.5f,  4.5f,  1.0f, 0.0f,   // 7
+
+	 6.5f, -2.5f,  4.5f,  1.0f, 0.0f,   // 7
+	-6.5f, -2.5f,  4.5f,  0.0f, 0.0f,   // 9
+	-6.5f, -2.5f, -4.5f,  0.0f, 1.0f,   // 4
+	};
+
+	float table_support[] = {
+
+		//back
+		-5.0f, -5.0f, -3.5f,    0.0f, 0.0f,   // 4  left down
+		 5.0f, -5.0f, -3.5f,    1.0f, 0.0f,   // 3  right down
+		 6.0f, -1.5f, -4.0f,    1.0f, 1.0f,   // 12 right top
+
+		 6.0f, -1.5f, -4.0f,    1.0f, 1.0f,   // 12
+		-6.0f, -1.5f, -4.0f,    0.0f, 1.0f,   // 13 left top
+		-5.0f, -5.0f, -3.5f,    0.0f, 0.0f,   // 4
+
+		//front
+		-5.0f, -5.0f,  3.5f,    0.0f, 0.0f,   // 9  left down
+		 5.0f, -5.0f,  3.5f,    1.0f, 0.0f,   // 7  right down
+		 6.0f, -1.5f,  4.0f,    1.0f, 1.0f,   // 11 right top
+
+		 6.0f, -1.5f,  4.0f,    1.0f, 1.0f,   // 11
+		-6.0f, -1.5f,  4.0f,    0.0f, 1.0f,   // 10 left top
+		-5.0f, -5.0f,  3.5f,    0.0f, 0.0f,   // 9
+
+		//left
+		-6.0f, -1.5f,  4.0f,    1.0f, 0.0f,   // 10
+		-6.0f, -1.5f, -4.0f,    1.0f, 1.0f,   // 13
+		-5.0f, -5.0f, -3.5f,    0.0f, 1.0f,   // 4
+
+		-5.0f, -5.0f, -3.5f,    0.0f, 1.0f,   // 4
+		-5.0f, -5.0f,  3.5f,    0.0f, 0.0f,   // 9
+		-6.0f, -1.5f,  4.0f,    1.0f, 0.0f,   // 10
+
+		//right
+		 6.0f, -1.5f,  4.0f,    1.0f, 0.0f,   // 11
+		 6.0f, -1.5f, -4.0f,    1.0f, 1.0f,   // 12
+		 5.0f, -5.0f, -3.5f,    0.0f, 1.0f,   // 3
+
+		 5.0f, -5.0f, -3.5f,    0.0f, 1.0f,   // 3
+		 5.0f, -5.0f,  3.5f,    0.0f, 0.0f,   // 7
+		 6.0f, -1.5f,  4.0f,    1.0f, 0.0f,   // 11
+	};
+
+	float back_and_front_faces[] = {
+
+		-17.0f,  10.0f,  0.0f,  0.0f, 0.0f, //a
+		-17.0f,  -6.2f,  0.0f,  0.0f, 1.0f, //b
+		 17.0f,  -6.2f,  0.0f,  1.0f, 1.0f, //c
+
+		-17.0f,  10.0f,  0.0f,  0.0f, 0.0f, //a
+		 17.0f,  -6.2f,  0.0f,  1.0f, 1.0f, //c
+		 17.0f,  10.0f,  0.0f,  1.0f, 0.0f  //d
+	};
+
+	float left_and_right_faces[] = {
+
+		0.0f,  10.0f,  30.0f,  0.0f, 0.0f, //a
+		0.0f,  -5.0f,  30.0f,  0.0f, 1.0f, //b
+		0.0f,  -5.0f,  -3.0f,  1.0f, 1.0f, //c
+
+		0.0f,  10.0f,  30.0f,  0.0f, 0.0f, //a
+		0.0f,  -5.0f,  -3.0f,  1.0f, 1.0f, //c
+		0.0f,  10.0f,  -3.0f,  1.0f, 0.0f  //d
+	};
+
+	float base_and_top_faces[] = {
+
+		-15.0f,  0.0f, -3.0f,  0.0f, 0.0f,  //a
+		-15.0f,  0.0f, 30.0f,  0.0f, 1.0f,  //b
+		 15.0f,  0.0f, 30.0f,  1.0f, 1.0f,  //c
+
+		-15.0f,  0.0f, -3.0f,  0.0f, 0.0f,  //a
+		 15.0f,  0.0f, 30.0f,  1.0f, 1.0f,  //c
+		 15.0f,  0.0f, -3.0f,  1.0f, 0.0f   //d
+	};
+
 	//base cube
 	GenerateVertexAndBind(base_VAO, base_VBO, 8);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(bottom_cube), bottom_cube, GL_STATIC_DRAW);
@@ -669,6 +795,26 @@ void DrawAquarium()
 	//column
 	GenerateVertexAndBind(column_VAO, column_VBO, 5);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(column), column, GL_STATIC_DRAW);
+
+	//table
+	GenerateVertexAndBind(table_VAO, table_VBO, 5);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(table), table, GL_STATIC_DRAW);
+
+	//table support
+	GenerateVertexAndBind(tableSupport_VAO, tableSupport_VBO, 5);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(table_support), table_support, GL_STATIC_DRAW);
+
+	//back_and_front_faces
+	GenerateVertexAndBind(back_and_front_faces_VAO, back_and_front_faces_VBO, 5);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(back_and_front_faces), back_and_front_faces, GL_STATIC_DRAW);
+
+	//left_and_right_faces
+	GenerateVertexAndBind(left_and_right_faces_VAO, left_and_right_faces_VBO, 5);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(left_and_right_faces), left_and_right_faces, GL_STATIC_DRAW);
+
+	//base_and_top_faces
+	GenerateVertexAndBind(base_and_top_faces_VAO, base_and_top_faces_VBO, 5);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(base_and_top_faces), base_and_top_faces, GL_STATIC_DRAW);
 }
 
 void Rotate(Shader& decoShader, glm::mat4& model, unsigned int texture, unsigned int numberOfRotations, unsigned int value)
@@ -716,11 +862,11 @@ void RenderFish(Shader& shader, Shader& decoShader)
 	};
 
 	static glm::vec2 incrementAndMovement[] = {
-		glm::vec2(0.019, 1.9),
-		glm::vec2(0.014,-1.9),
-		glm::vec2(0.013,-1.5),
-		glm::vec2(0.014, 2.5),
-		glm::vec2(0.013,-1.2)
+		glm::vec2(0.021, 1.9),
+		glm::vec2(0.018,-1.9),
+		glm::vec2(0.019,-1.5),
+		glm::vec2(0.019, 2.5),
+		glm::vec2(0.020,-1.2)
 	};
 
 	glm::vec3 fishPosition[] = {
@@ -786,7 +932,7 @@ void RenderRocks(Shader& shader)
 	glm::vec3 rockPosition[] = {
 		glm::vec3(-1.1f,-0.95f, 0.1f),
 		glm::vec3(1.4f,-0.95f,-1.4f),
-		glm::vec3(1.8f,-0.95f, 1.4f),
+		glm::vec3(0.8f,-0.95f, 1.4f),
 		glm::vec3(3.4f,-0.95f,-1.5f),
 		glm::vec3(-3.9f,-0.55f, 1.4f),
 		glm::vec3(2.9f,-0.95f, 2.0f),
@@ -1009,43 +1155,74 @@ void CreateAquarium(unsigned int& VAO, std::pair<unsigned int, std::string> text
 	glBindVertexArray(0);
 }
 
-void RenderColumns(Shader& shader, glm::vec3 position, unsigned int VAO)
+void RenderRoom(Shader& shader, glm::vec3 position, unsigned int VAO, std::pair<unsigned int, std::string> texture)
 {
 	glm::mat4 model2 = glm::mat4(1.0f);
 	model2 = glm::translate(model2, position);
 	shader.setMat4("model", model2);
-
-	CreateAquarium(VAO, cubeTextures[3]);
+	CreateAquarium(VAO, texture);
 }
 
 void RenderFunction(Shader& cubeShader, Shader& shadow, Shader& decoShader)
 {
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(1.0f, 0.5f, 1.1f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
 	//pt mutare manuala
 	glm::mat4 view = camera.GetViewMatrix();
-	//glm::mat4 view;
-	//float radius = 10.0f;
-	//float camx = sin(glfwGetTime()) * radius;
-	//float camz = cos(glfwGetTime()) * radius;
-	//view = glm::lookAt(glm::vec3(camx, 0.0f, camz), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 
+	glm::vec3 position[] = {
+		glm::vec3(0.0,  0.0,   0.0),  //support down
+		glm::vec3(0.0,  4.5,   0.0),  //support up
+		glm::vec3(5.0,  1.0,   3.0),  //column
+		glm::vec3(-5.0, 1.0,   3.0),  //column
+		glm::vec3(5.0,  1.0,  -3.0),  //column
+		glm::vec3(-5.0, 1.0,  -3.0),  //column
+
+		glm::vec3(0.0,  10.0,   0.0),  //ceiling
+		glm::vec3(0.0,  -5.0,   0.0),  //floor
+		glm::vec3(2.0,   0.0,  30.0),  //front
+		glm::vec3(0.0,   0.0,  -3.0),  //back
+		glm::vec3(-15.0, 0.0,   0.0),  //left
+		glm::vec3(15.0,  0.0,   0.0),  //right
+	};
+
 	cubeShader.use();
-	cubeShader.setMat4("model", model);
 	cubeShader.setMat4("projection", projection);
 	cubeShader.setMat4("view", view);
+
+	RenderRoom(cubeShader, position[6], base_and_top_faces_VAO, faces[0]);
+	RenderRoom(cubeShader, position[7], base_and_top_faces_VAO, faces[1]);
+	RenderRoom(cubeShader, position[8], back_and_front_faces_VAO, faces[3]);
+	RenderRoom(cubeShader, position[9], back_and_front_faces_VAO, faces[2]);
+	RenderRoom(cubeShader, position[10], left_and_right_faces_VAO, faces[4]);
+	RenderRoom(cubeShader, position[11], left_and_right_faces_VAO, faces[5]);
+
+	cubeShader.setMat4("model", model);
 
 	//cubul de sus
 	CreateAquarium(top_VAO, cubeTextures[0]);
 
 	//cubul din mijloc
 	CreateAquarium(middle_VAO, cubeTextures[1]);
+
+	CreateAquarium(table_VAO, cubeTextures[4]);
+
+	//table supports
+
+	RenderRoom(cubeShader, glm::vec3(0.0f, 0.0f, 0.0f), tableSupport_VAO, cubeTextures[4]);
+
+	//columns
+	RenderRoom(cubeShader, position[0], support_VAO, cubeTextures[3]);
+	RenderRoom(cubeShader, position[1], support_VAO, cubeTextures[3]);
+
+	for (int i = 2; i < 6; i++)
+		RenderRoom(cubeShader, position[i], column_VAO, cubeTextures[3]);
 
 	shadow.use();
 	shadow.setMat4("model", model);
@@ -1054,23 +1231,8 @@ void RenderFunction(Shader& cubeShader, Shader& shadow, Shader& decoShader)
 
 	//cubul de jos
 	CreateAquarium(base_VAO, cubeTextures[2]);
+
 	RenderFish(shadow, decoShader);
-
-	//columns and supports
-	glm::vec3 position[] = {
-		glm::vec3( 0.0, 0.0,  0.0),
-		glm::vec3( 0.0, 4.5,  0.0),
-		glm::vec3( 5.0, 1.0,  3.0),
-		glm::vec3(-5.0, 1.0,  3.0),
-		glm::vec3( 5.0, 1.0, -3.0),
-		glm::vec3(-5.0, 1.0, -3.0)
-	};
-
-	RenderColumns(cubeShader, position[0], support_VAO);
-	RenderColumns(cubeShader, position[1], support_VAO);
-
-	for (int i=2; i<6; i++)
-		RenderColumns(cubeShader, position[i], column_VAO);
 
 	decoShader.use();
 	decoShader.setMat4("projection", projection);
@@ -1143,6 +1305,9 @@ int main(int argc, char** argv)
 	for (auto& i : decoTextures)
 		Texture(i);
 
+	for (auto& i : faces)
+		Texture(i);
+
 	Shader cubeShader("topShader.vs", "topShader.fs");
 	Shader decoShader("Blending.vs", "Blending.fs");
 	Shader shadowMappingShader("ShadowMapping.vs", "ShadowMapping.fs");
@@ -1175,11 +1340,12 @@ int main(int argc, char** argv)
 	shadowMappingShader.setInt("diffuseTexture", 0);
 	shadowMappingShader.setInt("shadowMap", 1);
 
-	glm::vec3 lightPos(7.0f, 3.5f, 0.0f);
+	glm::vec3 lightPos(3.5f, 4.5f, 1.0f);
 	glm::mat4 lightProjection, lightView;
 	glm::mat4 lightSpaceMatrix;
 
-	float near_plane = 1.0f, far_plane = 7.5f;
+
+	float near_plane = 1.0f, far_plane = 10.0f;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -1187,7 +1353,8 @@ int main(int argc, char** argv)
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		lightProjection = glm::ortho(-5.0f, 5.0f, 0.2f, 4.5f, near_plane, far_plane);
+		lightProjection = glm::perspective(glm::radians(85.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT / 2.5f, near_plane, far_plane);
+		//lightProjection = glm::ortho(-5.0f, 5.0f, 0.1f, 4.5f, near_plane, far_plane);
 		lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, -1.0, 0.0));
 		lightSpaceMatrix = lightProjection * lightView;
 
@@ -1208,8 +1375,8 @@ int main(int argc, char** argv)
 		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		lightPos.x = glm::sin(1.0);
-		lightPos.z = glm::cos(1.0);
+		/*	lightPos.x = glm::sin(1.0);
+			lightPos.z = glm::cos(1.0);*/
 
 		glm::mat4 projection = camera.GetProjectionMatrix();
 		glm::mat4 view = camera.GetViewMatrix();
